@@ -1,0 +1,111 @@
+name: Solidity CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@V1
+      - name: Get node.js
+        uses: actions/setup-node@V1
+        with:
+          node-version: "18.x"
+          cache: "npm"
+      - run: npm ci
+      - run: npx hardhat compile --show-stack-traces
+      - run: TS_NODE_TRANSPILE_ONLY=1 npx hardhat test
+  forge_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@V1
+        with:
+          submodules: recursive
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      - name: Install Node modules
+        uses: actions/setup-node@V1
+        with:
+          node-version: "18.x"
+          cache: "npm"
+      - run: npm ci
+      - name: Run tests
+        run: FOUNDRY_PROFILE=intense forge test -vvv --no-match-contract=ValidatorStorage; forge test -vvv --match-contract=ValidatorStorage
+  gas_report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@V1
+      - name: Get node.js
+        uses: actions/setup-node@V1
+        with:
+          node-version: "18.x"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run test:gas
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@V1
+      - name: Get node.js
+        uses: actions/setup-node@V1
+        with:
+          node-version: "18.x"
+          cache: "npm"
+      - run: npm ci
+      - run: npx solhint "contracts/**/*.sol"
+      - run: npx eslint .
+      - run: npx prettier -c .
+  slither:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@V1
+      - name: Get node.js
+        uses: actions/setup-node@V1
+        with:
+          node-version: "18.x"
+          cache: "npm"
+      - uses: crytic/slither-action@v0.3.0
+        with:
+          node-version: 18
+          slither-args: "--compile-force-framework hardhat"
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@V1
+      - name: Get node.js
+        uses: actions/setup-node@V1
+        with:
+          node-version: "18.x"
+          cache: "npm"
+      - run: npm ci
+      - run: npx hardhat compile
+      - name: solidity-coverage
+        run: npx hardhat coverage
+      - name: coveralls
+        uses: coverallsapp/github-action@v2.1.2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+  forge_coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@V1
+        with:
+          submodules: recursive
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      - name: Install Node modules
+        uses: actions/setup-node@V1
+        with:
+          node-version: "18.x"
+          cache: "npm"
+      - run: npm ci
+      - name: Print coverage
+        run: forge b; forge coverage

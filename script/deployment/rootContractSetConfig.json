@@ -1,0 +1,18 @@
+{
+  "ProxyAdmin": {
+    "proxyAdminOwner": ""
+  },
+
+  "CheckpointManager": {
+    "initiator": ""
+  },
+
+  "CustomMetachainManager": {
+    "newStakeManager": "",
+    "newBls": "",
+    "newMatic": "",
+    "newChildValidatorSet": "",
+    "newRootERC20Predicate": "",
+    "newDomain": ""
+  }
+}
